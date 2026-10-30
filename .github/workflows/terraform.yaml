@@ -8,6 +8,15 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Choose Terraform action"
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
 
 jobs:
   terraform:
@@ -32,15 +41,18 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
-        run: terraform init
+        run: terraform init -input=false
 
+      - name: Terraform Format
+        run: terraform fmt -check -recursive
 
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
+        if: github.event_name != 'workflow_dispatch' || inputs.action == 'plan'
         run: terraform plan -input=false
 
       - name: Terraform Apply
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: terraform apply -input=false -auto-approveas
+        if: github.event_name == 'workflow_dispatch' && inputs.action == 'apply'
+        run: terraform apply -input=false -auto-approve
