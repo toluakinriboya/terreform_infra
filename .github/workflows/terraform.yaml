@@ -1,4 +1,4 @@
-
+```yaml
 name: Terraform CI/CD
 
 on:
@@ -24,6 +24,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: terraform-state
+  cancel-in-progress: false
+
 jobs:
   terraform:
     name: Terraform CI/CD
@@ -48,11 +52,9 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Initialize Terraform
+      # Initialize Terraform with S3 backend
       - name: Terraform Init
         run: terraform init -input=false
-
-
       # Validate Terraform configuration
       - name: Terraform Validate
         run: terraform validate
@@ -71,3 +73,4 @@ jobs:
       - name: Terraform Destroy
         if: github.event_name == 'workflow_dispatch' && inputs.action == 'destroy'
         run: terraform destroy -input=false -auto-approve
+```
